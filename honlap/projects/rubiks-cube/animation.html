@@ -1,0 +1,417 @@
+﻿
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- 2023. 10. 07. 7:12 -->
+		<title>Rubik Kocka</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="user-scalable=no, viewport-fit=cover">
+
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+            * {
+                margin: 0;
+                touch-action: none;
+                user-select: none;
+                -webkit-user-select: none;
+                font-family: 'Roboto Mono', monospace;
+                overflow: hidden;
+            }
+
+            body {
+                /* background: radial-gradient(farthest-corner at 40px 40px, #f35 0%, #43e 100%); */
+                background: linear-gradient(45deg, grey, white);
+                background-color: #111;
+                height: 100vh; /*width: 101vw;*/
+                margin: 1px;
+                /*background: radial-gradient(white, rgba(0, 0, 0, 0.8))*/
+            }
+
+            canvas {
+                position: absolute;
+            }
+
+            #timer, #button {
+                position: absolute; bottom: 20px; left: 20px;
+                width: 30vmin; height: 5vmin;
+
+                color: white; font-size: 5vmin; line-height: 5vmin;
+            }
+
+            #timer {
+                left: 12vmin;
+            }
+        </style>
+    </head>
+    <body onload="script();">
+        <canvas id="myCanvas"></canvas>
+        <div id="timer">00:00.00</div>
+        <div id="button"><img src="img/shuffle.svg" height="100%" alt="shuffle"></div>
+
+        <script>
+            // configurable constants, variables
+            const fps = 60, sensitivity = 200 / Math.min(innerWidth, window.innerHeight) / fps, distance = 15, rotation_duration = .15*fps*Math.PI, sticker_size = .95, ambientLight = 0, diffuseLight = [[1, -1, -1], [-.5, .5, -.5]];
+            var scale = 2.9*Math.min(innerWidth, window.innerHeight);
+            const from_sticker_center = true;
+            const color = ["#d9d952", "#e33122", "#33751f", "#f4f4f4", "#ea8a33", "#0000ed"]; document.body.style.background = "black"; //yrgwob
+            // const color = ["#6667AB", "#F18AAD", "#EA6759", "#F88F58", "#F3C65F", "#8BC28C"]; document.body.style.background = "black"; //yrgwob
+            // const color = ["#00609b", "#1d8dcc", "#64bdff", "#539b32", "#84cc60", "#b7ff90"]; document.body.style.background = "black"; //yrgwob
+            // const color = [{r:255,g:255,b:0},{r:255,g:0,b:0},{r:0,g:255,b:0},{r:255,g:255,b:255},{r:255,g:127,b:0},{r:0,g:0,b:255}];
+
+            // defining global constants, variables
+            const point = [], sticker = [], base = [[1,0,0],[0,1,0],[0,0,1]], normal = -1.5*1.5/distance*.9*.9/Math.sqrt(2);
+            var mouse_pressed = false, alpha = 0, beta = 0, gamma = 0, mouse_x, mouse_y, mouse_x_old, mouse_y_old, mouse_down_x, mouse_down_y, time = 0, appear = [], shown = [], drawn = [], clicked, swipe_count, rotating = false, canvas, time_div = document.getElementById("timer"), solved = true, button_counter = 0, shuffled = false, timed = false, myCanvas = document.getElementById("myCanvas"), scale_dist_ratio, touch_angle;
+            const h = window.innerHeight/2;
+
+            // html adjustments
+            let adjust = () => {
+                canvas = myCanvas;
+                canvas.width = innerWidth;
+                canvas.height = window.innerHeight;
+                canvas = canvas.getContext("2d");
+                canvas.translate(innerWidth/2, h);
+                    
+                if (window.navigator.standalone) {
+                    time_div.style.bottom = "-24px";
+                    document.getElementById("button").style.bottom = "-24px";
+                }
+
+                window.scrollTo(0, 0);
+            }
+
+            // creating points
+            let initializePoints = () => {
+                solved = true;
+                shuffled = false;
+                let counter = 0, counter2 = 0;
+                for (let i = 0; i < 3; i++) {
+                    for (let j = -1; j < 2; j += 2) {
+                        for (let k = -1; k < 2; k++) {
+                            for (let l = -1; l < 2; l++) {
+                                for (let k_off = -sticker_size/2; k_off < .5; k_off += sticker_size) {
+                                    for (let l_off = -sticker_size/2; l_off < .5; l_off += sticker_size) {
+                                        let c = [j*(k+k_off), j*(l+l_off), 1.5*j];
+                                        point[counter2] = [c[i], c[(i+1)%3], c[(i+2)%3]];
+                                        counter2++;
+                                    }
+                                }
+                                j > 0 ? sticker[counter] = [4*counter, 4*counter+1, 4*counter+3, 4*counter+2, Math.round(i+1.5*(j+1))] : sticker[counter] = [4*counter+2, 4*counter+3, 4*counter+1, 4*counter, Math.round(i+1.5*(j+1))];
+                                counter++;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // rotating base & layers
+            let rotate = (points, angles) => {
+                for (let i = 0; i < 3; i++) {
+                    if (angles[i]) {
+                        let sin = Math.sin(angles[i]), cos = Math.cos(angles[i]);    
+                        for (let p of points) {
+                            let a = p[(i+1)%3], b = p[(i+2)%3];
+                            p[(i+1)%3] = cos*a-sin*b;
+                            p[(i+2)%3] = sin*a+cos*b;
+                            a = p[(i+1)%3]; b = p[(i+2)%3];
+                        }
+                    }
+                }
+            }
+
+            // smooth rotations
+            let rotateSmoothly = (points, angles) => {
+                rotating = true;
+                rotate(points, [Math.sign(angles[0])*0.0003588853417886284, Math.sign(angles[1])*0.0003588853417886284, Math.sign(angles[2])*0.0003588853417886284]);
+                for (let t = 0; t < Math.PI; t += Math.PI/fps) {
+                    let multi = Math.sin(t)*Math.PI/fps/2;
+                    let delta = [angles[0]*multi, angles[1]*multi, angles[2]*multi];
+                    setTimeout(() => {
+                        rotate(points, delta);
+                    }, t*rotation_duration);
+                }
+                setTimeout(() => {
+                    checkIfSolved();
+                    rotating = false;
+                }, Math.PI*rotation_duration);
+            }
+
+            // apply rotation matrix
+            let applyRotations = (points) => {
+                let result = [];
+
+                for (let i in points) {
+                    let c = [
+                        base[0][0]*points[i][0]+base[1][0]*points[i][1]+base[2][0]*points[i][2],
+                        base[0][1]*points[i][0]+base[1][1]*points[i][1]+base[2][1]*points[i][2],
+                        base[0][2]*points[i][0]+base[1][2]*points[i][1]+base[2][2]*points[i][2],
+                    ];
+
+                    result.push(c);
+                }
+
+                return result;
+            }
+
+            // see which sticker contains the click
+            let contains = (x, y) => {
+                for (st of shown) {
+                    const s0 = []; for (let i = 0; i < 4; i++) s0.push([Math.round(point[sticker[st][i]][0]*2)/2, Math.round(point[sticker[st][i]][1]*2)/2, Math.round(point[sticker[st][i]][2]*2)/2]);
+                    var s1 = applyRotations(s0);
+                    let s = []; for (let i = 0; i < 4; i++) s.push([s1[i][0]*scale/(s1[i][2]+distance), s1[i][1]*scale/(s1[i][2]+distance)]);
+
+                    counter = 0;
+                    for (let i = 0; i < 4; i++) {
+                        let p1 = s[i], p2 = s[(i+1)%4];
+                        let X = (y-p1[1])*(p1[0]-p2[0])/(p1[1]-p2[1])+p1[0];
+                        if (X > x && Math.sign(X-p1[0]) == Math.sign(p2[0]-X)) counter++;
+                    }
+
+                    if (counter == 1) {
+                        clicked = st;
+
+                        return st;
+                    }
+                }
+
+                return -1;
+            }
+
+            // see which direction they drag the sticker
+            let getDirections = (x, y, x_new, y_new) => {
+                let theta = []; for (let i = 0; i < 4; i++) theta.push(Math.atan2(drawn[sticker[clicked][i]][1]-y, drawn[sticker[clicked][i]][0]-x));
+                let phi = Math.atan2(y_new-y, x_new-x);
+
+                let counter = 0;
+                while((theta[0] > theta[1] || theta[1] > theta[2] || theta[2] > theta[3]) && counter < 5) {
+                    theta.push(theta.shift());
+                    counter++;
+                }
+                
+                let ind = 3;
+                for (let i = 0; i < 3; i++) if (Math.sign(phi - theta[i]) == Math.sign(theta[i+1] - phi)) ind = i;
+                let p1 = point[sticker[clicked][(ind+counter)%4]], p2 = point[sticker[clicked][(ind+counter+1)%4]];
+
+                return [(p1[0]+p2[0])/2, (p1[1]+p2[1])/2, (p1[2]+p2[2])/2]
+            }
+
+            // event listeners
+            let down = (e, multiple = false, e2 = []) => {
+                if (!multiple) {
+                    mouse_down_x = e.clientX;
+                    mouse_down_y = e.clientY;
+                    mouse_x = e.clientX;
+                    mouse_y = e.clientY;
+                    mouse_pressed = true;
+                    swipe_count = 0;
+
+                    if (contains(e.clientX-innerWidth/2, e.clientY-h) == -1) clicked = -1;
+                } else {
+                    scale_dist_ratio = scale / Math.log2(Math.pow(e.clientX-e2.clientX, 2) + Math.pow(e.clientY-e2.clientY, 2));
+                    touch_angle = Math.atan2(e.clientY-e2.clientY, e.clientX-e2.clientX);
+                }
+            }
+            let move = (e, multiple = false, e2 = []) => {
+                if (!multiple) {
+                    mouse_x_old = mouse_x;
+                    mouse_y_old = mouse_y;
+                    
+                    mouse_x = e.clientX;
+                    mouse_y = e.clientY;
+                    
+                    if (mouse_pressed) {
+                        if (clicked != -1) {
+                            if (swipe_count == 2 && !rotating) { // rotation
+                                if (!timed) timer();
+
+                                let edge_middle;
+                                if (!from_sticker_center) {
+                                    edge_middle = getDirections(mouse_down_x-innerWidth/2, mouse_down_y-h, mouse_x-innerWidth/2, mouse_y-h);
+                                } else {
+                                    let cent = [(drawn[sticker[clicked][0]][0]+drawn[sticker[clicked][1]][0]+drawn[sticker[clicked][2]][0]+drawn[sticker[clicked][3]][0])/4, (drawn[sticker[clicked][0]][1]+drawn[sticker[clicked][1]][1]+drawn[sticker[clicked][2]][1]+drawn[sticker[clicked][3]][1])/4];
+                                    edge_middle = getDirections(cent[0], cent[1],  cent[0]+mouse_x-mouse_down_x, cent[1]+mouse_y-mouse_down_y);
+                                }
+                                let rotated_points, axes = [], angles = [0, 0, 0];
+                                for (let i in edge_middle) if (Math.abs(edge_middle[i]- Math.round(edge_middle[i])) < 0.01) {
+                                    axes[0] = i; axes[1] = (i+1)%3; axes[2] = (i+2)%3;
+                                    rotated_points = getPointsInLayer(axes[0], edge_middle[i]-(.5+(1-sticker_size)/4), edge_middle[i]+(.5+(1-sticker_size)/4));
+                                }
+                                angles[axes[0]] = Math.PI/2;
+                                let center = [0, 0, 0]; for (let i in center) center[i] = Math.round(point[sticker[clicked][0]][i]+point[sticker[clicked][2]][i])/2;
+                                let khi = [Math.atan2(center[axes[2]], center[axes[1]]), Math.atan2(edge_middle[axes[2]], edge_middle[axes[1]])];
+                                if (khi[0] > khi[1] && khi[0] - khi[1] < Math.PI || khi[1] - khi[0] > Math.PI) angles[axes[0]] *= -1;
+
+                                rotateSmoothly(rotated_points, angles);
+                            }
+                        } else {
+                            alpha = (mouse_y-mouse_y_old)*sensitivity;
+                            beta = -(mouse_x-mouse_x_old)*sensitivity;
+                        }
+                    }
+
+                    swipe_count++;
+                } else {
+                    let touch_angle_new = Math.atan2(e.clientY-e2.clientY, e.clientX-e2.clientX);
+                    gamma = (touch_angle_new - touch_angle) % (2*Math.PI);
+                    touch_angle = touch_angle_new;
+                    scale = scale_dist_ratio * Math.log2(Math.pow(e.clientX-e2.clientX, 2) + Math.pow(e.clientY-e2.clientY, 2));
+                }
+            }
+            let up = (e) => {
+                mouse_pressed = false;
+                swipe_count = 0;
+            }
+            let wheel = (e) => {
+                scale *= Math.pow(.999, e.deltaY);
+            }
+
+            // add event listeners
+            let addEventListeners = () => {
+                document.body.addEventListener('mousedown', function () { down(event) });
+                document.body.addEventListener('mouseup', function () { up(event) });
+                document.body.addEventListener('mousemove', function () { move(event) });
+                document.body.addEventListener('wheel', function () { wheel(event) });
+
+                document.body.addEventListener('touchstart', function () { event.touches.length == 1 ? down(event.touches[0]) : down(event.touches[0], true, event.touches[1]); });
+                document.body.addEventListener('touchend', function () { up(event.touches[0]) });
+                document.body.addEventListener('touchmove', function () { event.touches.length == 1 ? move(event.touches[0]) : move(event.touches[0], true, event.touches[1]); });
+
+                document.getElementById("button").addEventListener('click', function () {
+                    button_counter++;
+                    time_div.innerHTML = "00:00.00";
+                    if (button_counter%2) {
+                        shuffle();
+                        this.innerHTML = '<img src="img/restart.svg" height="100%" alt="restart">';
+                    } else {
+                        initializePoints();
+                        this.innerHTML = '<img src="img/shuffle.svg" height="100%" alt="shuffle">';
+                    }
+                });
+            }
+
+            // get layers
+            let getPointsInLayer = (axis, min, max, stickers = false) => {
+                let result = [];
+
+                for (let i in sticker) if (Math.round(point[sticker[i][0]][axis]+point[sticker[i][2]][axis])/2 > min && Math.round(point[sticker[i][0]][axis]+point[sticker[i][2]][axis])/2 < max) stickers ? result.push(sticker[i]) : result.push(point[sticker[i][0]], point[sticker[i][1]], point[sticker[i][2]], point[sticker[i][3]]);
+
+                return result;
+            }
+
+            // order
+            let order = () => {
+                let ordered = [], result = [];
+                for (let i in shown) {
+                    let big = 0;
+                    while (ordered[big] !== undefined) big++;
+                    let d_big = appear[sticker[shown[big]][0]][2]+appear[sticker[shown[big]][2]][2];
+                    for (let j in shown) {
+                        if (j && ordered[j] === undefined && appear[sticker[shown[j]][0]][2]+appear[sticker[shown[j]][2]][2] > d_big) {
+                            big = j;
+                            d_big = appear[sticker[shown[big]][0]][2]+appear[sticker[shown[big]][2]][2];
+                        }
+                    }
+                    ordered[big] = true;
+                    result.push(sticker[shown[big]]);
+                }
+
+                return result;
+            }
+
+            // shuffle
+            let shuffle = () => {
+                shuffled = true;
+                for (let i = 0; i < 30; i++) {
+                    let axis = Math.floor(Math.random()*3), possible_rotations = [1, 2, -1];
+                    let angles = [0, 0, 0]; angles[axis] = Math.PI/2*Math.floor(possible_rotations[Math.floor(Math.random()*3)]);
+                    let min = Math.sign(Math.random()-.5)-(.5+(1-sticker_size)/4), max = min+1+(1-sticker_size)/2;
+                    rotate(getPointsInLayer(axis, min, max), angles);
+                }
+            }
+
+            // timer
+            let timer = () => {
+                timed = true;
+                setInterval(() => {
+                    if (!solved && shuffled) {
+                        const values = [String(Math.floor(time/6000)), String(Math.floor(time/100)%60), String(time%100)];
+                        for (i in values) while (values[i].length < 2) values[i] = "0" + values[i];
+                        time_div.innerHTML = values[0] + ":" + values[1] + "." + values[2];
+                        time++;
+                    } else {
+                        time = 0;
+                    }
+                }, 10);
+            }
+
+            // checking if the cube is solved yet
+            let checkIfSolved = () => {
+                for (let i = 0; i < 6; i++) {
+                    let boundaries = [1.5-(1-sticker_size)/4, 2], parity = Math.sign(.5-i%2);
+                    let stickers = getPointsInLayer(i%3, parity*boundaries[i%2], parity*boundaries[(i+1)%2], "stickers");
+                    for (let j in stickers) if (stickers[j][4] != stickers[0][4]) {
+                        document.getElementById("button").innerHTML = '<img src="img/restart.svg" height="100%" alt="restart">';
+                        button_counter = 1;
+                        solved = false;
+                        return false;
+                        break;
+                    }
+                }
+
+                document.getElementById("button").innerHTML = '<img src="img/shuffle.svg" height="100%" alt="shuffle">';
+                button_counter = 0;
+                solved = true;
+                shuffled = false;
+                return true;
+            }
+
+            // cross product
+            let normalOfSticker = (s) => {
+                let vec1 = [appear[s[0]][0]-appear[s[1]][0], appear[s[0]][1]-appear[s[1]][1], appear[s[0]][2]-appear[s[1]][2]];
+                let vec2 = [appear[s[2]][0]-appear[s[1]][0], appear[s[2]][1]-appear[s[1]][1], appear[s[2]][2]-appear[s[1]][2]];
+
+                return [vec1[1]*vec2[2]-vec1[2]*vec2[1], vec1[2]*vec2[0]-vec1[0]*vec2[2], vec1[0]*vec2[1]-vec1[1]*vec2[0]];
+            }
+
+            // script
+            let script = () => {
+                adjust();
+                initializePoints();
+                addEventListeners();
+                rotate(base, [3.5+Math.PI/2, .5, 0.2]);
+
+                setInterval(() => {
+                    alpha *= .9; beta *= .9; gamma *= .9;
+                    rotate(base, [alpha, beta, gamma]);
+                    
+                    canvas.clearRect(-innerWidth/2, -h, innerWidth, window.innerHeight);
+
+                    appear = applyRotations(point);
+
+                    drawn = [];
+                    for (let a of appear) drawn.push([a[0]*scale/(a[2]+distance), a[1]*scale/(a[2]+distance)]);
+
+                    shown = [];
+                    for (let i in sticker) if (normalOfSticker(sticker[i])[2] < normal) shown.push(i);
+                    
+                    for (let s of order()) {
+                        // let col0 = color[s[4]];
+                        // let stickerNormal = normalOfSticker(s);
+                        // let intensity = ambientLight;
+                        // for (const d of diffuseLight) intensity += Math.max(0, stickerNormal[0]*d[0]+stickerNormal[1]*d[1]+stickerNormal[2]*d[2]);
+                        // if (col0.r*intensity > 255) intensity = 255/col0.r;
+                        // if (col0.g*intensity > 255) intensity = 255/col0.g;
+                        // if (col0.b*intensity > 255) intensity = 255/col0.b;
+                        // canvas.fillStyle = "rgb(" + Math.floor(col0.r*intensity) + ", " + Math.floor(col0.g*intensity) + ", " + Math.floor(col0.b*intensity) + ")";
+                        canvas.fillStyle = color[s[4]];
+
+                        canvas.beginPath();
+                        for (let j = 0; j < 4; j++) j ? canvas.lineTo(drawn[s[j]][0], drawn[s[j]][1]) : canvas.moveTo(drawn[s[j]][0], drawn[s[j]][1]);
+                        canvas.closePath();
+                        canvas.fill();
+                    }
+                }, 1000 / fps);
+            }
+        </script>
+    </body>
+</html>

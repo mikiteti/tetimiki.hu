@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 2024. 04. 18. 21:11 -->
+        <title>Sierpinski Triangle</title>
+
+        <style>
+            html, body {
+                margin: 0;
+                height: 100%;
+                overflow: hidden;
+                touch-action: none;
+
+
+                background-color: black;
+                background-image: linear-gradient(125deg, #222, black);
+            }
+
+            canvas {
+                position: absolute; left: 50%; top: 50%;
+                transform: translate(-50%, -50%);
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+        <canvas id="tempCanvas" style="opacity: 0;"></canvas>
+
+        <script>
+            const myCanvas = document.getElementById("myCanvas"), canv = myCanvas.getContext("2d"), size = Math.min(innerHeight*2/Math.sqrt(3), innerWidth) * .9;
+            const tempCanvas = document.getElementById("tempCanvas"), tempCanv = tempCanvas.getContext("2d");
+            let iterationCount = 0;
+
+            let draw = () => {
+                const pattern2 = tempCanv.createPattern(myCanvas, "no-repeat");
+                tempCanv.fillStyle = pattern2;
+                tempCanv.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+                tempCanv.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+                tempCanvas.style.opacity = 1;
+
+                const pattern = canv.createPattern(tempCanvas, "no-repeat");
+                canv.fillStyle = pattern;
+                canv.setTransform(1, 0, 0, 1, 0, 0);
+                canv.clearRect(0, 0, myCanvas.width, myCanvas.height)
+                canv.scale(.5, .5);
+                canv.translate(0, myCanvas.height);
+                canv.fillRect(0, 0, myCanvas.width, myCanvas.height);
+                canv.translate(myCanvas.width, 0);
+                canv.fillRect(0, 0, myCanvas.width, myCanvas.height);
+                canv.translate(-myCanvas.width/2, -myCanvas.height);
+                canv.fillRect(0, 0, myCanvas.width, myCanvas.height);
+
+
+                tempCanvas.animate(
+                    [
+                        { opacity: 1 },
+                        { opacity: 0 }
+                    ],
+                    {
+                        duration: 500,
+                        iterations: 1
+                    }
+                );
+                setTimeout(() => {
+                    tempCanvas.style.opacity = "0";
+                }, 450);
+
+                if (iterationCount > 5) {
+                    myCanvas.style.opacity = 0;
+                    myCanvas.animate(
+                        [
+                            { opacity: 0 },
+                            { opacity: 1 }
+                        ],
+                        {
+                            duration: 500,
+                            iterations: 1
+                        }
+                    );
+                    setTimeout(() => {
+                        myCanvas.style.opacity = "1";
+                    }, 450);
+                }
+
+                iterationCount++;
+            }
+            document.addEventListener('click', draw);
+
+            let setup = () => {
+                myCanvas.width = size;
+                myCanvas.height = size*Math.sqrt(3)/2;
+
+                tempCanvas.width = size;
+                tempCanvas.height = size*Math.sqrt(3)/2;
+
+                canv.fillStyle = "white";
+                canv.beginPath();
+                canv.moveTo(0, tempCanvas.height);
+                canv.lineTo(tempCanvas.width/2, 0);
+                canv.lineTo(tempCanvas.width, tempCanvas.height);
+                canv.fill();
+            }
+            setup();
+        </script>
+    </body>
+</html>

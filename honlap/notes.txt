@@ -1,0 +1,8 @@
+Projektenként kell: 
+	egy hero.jpg -- max. 200 kb, 1920*1080 -- pont a monitor mérete, úgyhogy képmetszővel könnyű vele bánni
+	egy gallery.jpg -- max 100 kb, arány: 5:8 400x624
+	title
+	desrciption
+	light-content/dark-content
+	tagek -- 3d/chaos/...
+	új? 

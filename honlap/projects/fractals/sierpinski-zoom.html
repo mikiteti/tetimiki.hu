@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 2024. 04. 19. 9:32 -->
+        <title>Sierpinski Triangle</title>
+
+        <style>
+            html, body {
+                margin: 0;
+                height: 100%;
+                overflow: hidden;
+                touch-action: none;
+
+                background-color: black;
+                /* background-image: linear-gradient(125deg, #222, black); */
+            }
+
+            #myCanvas {
+                position: absolute; right: 0; top: 0;
+                transform-origin: top right;
+                transform: scale(.5, .5);
+            }
+        </style>
+    </head>
+    <body class="still">
+        <canvas id="myCanvas"></canvas>
+
+        <script>
+            const myCanvas = document.getElementById("myCanvas"), canv = myCanvas.getContext("2d"), size = Math.min(innerHeight*2/Math.sqrt(3), innerWidth) * .9;
+            let previousIsDone = true;
+
+            let s = 1;
+            let draw = () => {
+                s *= 1.005;
+
+                canv.setTransform(1, 0, 0, 1, 0, 0);
+                canv.clearRect(0, 0, myCanvas.width, myCanvas.height);
+                canv.scale(s, s);
+
+                canv.translate(0, myCanvas.height*(1/s-1));
+                canv.fillRect(0, 0, myCanvas.width, myCanvas.height);
+
+                if (s > 2) s = 1;
+            }
+
+
+            let setup = () => {
+                myCanvas.width = 2*size;
+                myCanvas.height = 2*size*Math.sqrt(3)/2;
+
+                canv.fillStyle = "white";
+                canv.beginPath();
+                canv.moveTo(0, myCanvas.height);
+                canv.lineTo(myCanvas.width/2, 0);
+                canv.lineTo(myCanvas.width, myCanvas.height);
+                canv.fill();
+
+                for (let i = 0; i < 8; i++) {
+                    const pattern = canv.createPattern(myCanvas, "no-repeat");
+                        canv.fillStyle = pattern;
+                        canv.setTransform(1, 0, 0, 1, 0, 0);
+                        canv.clearRect(0, 0, myCanvas.width, myCanvas.height)
+                        canv.scale(.5, .5);
+
+                        canv.translate(0, myCanvas.height);
+                        canv.fillRect(0, 0, myCanvas.width, myCanvas.height);
+
+                        canv.translate(myCanvas.width, 0);
+                        canv.fillRect(0, 0, myCanvas.width, myCanvas.height);
+
+                        canv.translate(-myCanvas.width/2, -myCanvas.height);
+                        canv.fillRect(0, 0, myCanvas.width, myCanvas.height);
+                }
+
+                const pattern = canv.createPattern(myCanvas, "no-repeat");
+                canv.fillStyle = pattern;
+
+                setInterval(() => {
+                    draw();
+                }, 10);
+            }
+            setup();
+        </script>
+    </body>
+</html>

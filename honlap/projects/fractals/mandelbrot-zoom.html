@@ -1,0 +1,195 @@
+<html>
+    <head>
+        <!-- 2024. 05. 01. 10:17 -->
+        <title>Mandelbrot Set Zoom</title>
+        <meta charset="utf-8">
+        <script>console.log('%cCOPYRIGHT © 2021 TÉTI MIKI. ALL RIGHTS RESERVED.', 'color: green; font-weight: bold');</script>
+        <script src="../p5.min.js"></script>
+
+        <style>
+            html, body {
+                /* background: linear-gradient(135deg, #6f00ff, #ff9500); */
+                background: black;
+
+                margin: 0;
+                overflow: hidden;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <main></main>
+
+        <script>
+            let myShader, mouseX=innerWidth/2, mouseY=innerHeight/2, mouseX_old=mouseX, mouseY_old=mouseY, scale = 4, centerX = -0.75, centerY = 0, maxIterations = 1000, mouseIsDown = false;
+
+            let vert = `
+                attribute vec3 aPosition;
+                attribute vec2 aTexCoord;
+
+                varying vec2 pos;
+
+                void main() {
+                    pos = aTexCoord;
+
+                    vec4 position = vec4(aPosition, 1.);
+                    position.xy = position.xy * 2. - 1.;
+
+                    gl_Position = position;
+                }
+            `, frag = `
+                precision mediump float;
+
+                varying vec2 pos;
+
+                uniform vec2 u_size;
+                uniform float scale;
+                uniform int u_max;
+                uniform vec2 center;
+
+                uniform float number_of_colors;
+                uniform float R[10];
+                uniform float G[10];
+                uniform float B[10];
+
+                float remap( float minval, float maxval, float curval )
+                {
+                    return ( curval - minval ) / ( maxval - minval );
+                }
+
+                // const vec3 col1 = vec3(0.396,0.404,0.561);
+                // const vec3 col2 = vec3(0.671,0.741,0.749);
+                // const vec3 col3 = vec3(0.663,0.749,0.824);
+                // const vec3 col4 = vec3(0.729,0.769,0.333);
+                // const vec3 col5 = vec3(0.663,0.667,0.325);
+
+                // const vec3 col1 = vec3(0.314,0.361,0.549);
+                // const vec3 col2 = vec3(0.49,0.204,0.922);
+                // const vec3 col3 = vec3(0.647,0.557,0.796);
+                // const vec3 col4 = vec3(0.855,0.925,0.729);
+                // const vec3 col5 = vec3(0.831,0.549,0.549);
+
+
+                void main() {
+                    vec3 col = vec3(0., 0., 0.);
+                    vec2 z0 = (pos-.5) * u_size * scale + center;
+                    vec2 z2 = vec2(0., 0.);
+
+                    bool inside = true;
+                    const int max = 100000;
+                    float w = 0.;
+                    for (int i = 0; i < max; ++i) {
+                        if (z2.x + z2.y < 4.) {
+                            float x = z2.x - z2.y + z0.x;
+                            float y = w - z2.x - z2.y + z0.y;
+                            z2.x = x*x;
+                            z2.y = y*y;
+                            w = (x+y)*(x+y);
+                        } else {
+                            vec2 preserve = z2;
+                            for (int j = 0; j < 4; ++j) {
+                                float x = z2.x - z2.y + z0.x;
+                                float y = w - z2.x - z2.y + z0.y;
+                                z2.x = x*x;
+                                z2.y = y*y;
+                                w = (x+y)*(x+y);
+                            }
+                            float phi = log(z2.x + z2.y) * pow(2., -4.);
+
+
+                            float log_zn = log(preserve.x + preserve.y - phi) * .5;
+                            float nu = log(log_zn);
+                            float u = mod((float(i + 1) - nu) / float(u_max) * 10., 1.);
+
+                            // float u = mod(float(i) + 1. + log(log(preserve.x + preserve.y))/log(2.), 1.);
+
+                            // float u = (float(i) - (25. * floor(float(i)/25.))) / 25.;
+
+                            // float u = mod(pow(pow(float(i)/float(u_max), 0.75)*number_of_colors, 1.5), 1.);
+
+                            for (int i = 0; i < 10; ++i) {
+                                if (float(i+1) >= u*number_of_colors) {
+                                    if (i < int(number_of_colors)-1) {
+                                        col = mix(vec3(R[i], G[i], B[i]), vec3(R[i+1], G[i+1], B[i+1]), remap(float(i)/number_of_colors, float(i+1)/number_of_colors, u));
+                                    } else {
+                                        col = mix(vec3(R[i], G[i], B[i]), vec3(R[0], G[0], B[0]), remap(float(i)/number_of_colors, 1., u));
+                                    }
+                                    break;
+                                }
+                            }
+
+                            break;
+                        }
+
+                        if (i > u_max) {
+                            break;
+                        }
+                    }
+
+
+                    gl_FragColor = vec4(col, 1.0);
+                }
+            `;
+
+            function setup() {
+                createCanvas(innerWidth, innerHeight, WEBGL);
+                noStroke();
+
+                myShader = createShader(vert, frag);
+                
+                shader(myShader);
+                myShader.setUniform("u_size", [innerWidth / max(innerHeight, innerWidth), innerHeight / max(innerHeight, innerWidth)]);
+                myShader.setUniform("scale", scale);
+                myShader.setUniform("u_max", maxIterations);
+                myShader.setUniform("center", [centerX, centerY]);
+                
+                myShader.setUniform("number_of_colors", 5);
+                myShader.setUniform("R", [.314, .490, .647, .855, .831]);
+                myShader.setUniform("G", [.361, .204, .557, .925, .549]);
+                myShader.setUniform("B", [.549, .922, .796, .729, .549]);
+            }
+
+            function draw() {
+                clear();
+
+                rect();
+            }
+
+
+            window.addEventListener("mousedown", function (e) { mouseIsDown = true; });
+
+            window.addEventListener("mousemove", function (e) {
+                mouseX_old = mouseX;
+                mouseY_old = mouseY;
+
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+
+                if (mouseIsDown) {
+                    centerX -= (mouseX-mouseX_old)*(1 / Math.max(innerWidth, innerHeight))*scale;
+                    centerY += (mouseY-mouseY_old)*(1 / Math.max(innerWidth, innerHeight))*scale;
+
+                    myShader.setUniform("center", [centerX, centerY]);
+                }
+            });
+
+            window.addEventListener("mouseup", function (e) { mouseIsDown = false; });
+
+            window.addEventListener("wheel", function (e) {
+                let dY = e.deltaY;
+
+                centerX += (mouseX-innerWidth *.5)*(1 / Math.max(innerWidth, innerHeight))*scale;
+                centerY -= (mouseY-innerHeight*.5)*(1 / Math.max(innerWidth, innerHeight))*scale;
+
+                scale *= Math.pow(1.001, dY);
+
+                centerX -= (mouseX-innerWidth *.5)*(1 / Math.max(innerWidth, innerHeight))*scale;
+                centerY += (mouseY-innerHeight*.5)*(1 / Math.max(innerWidth, innerHeight))*scale;
+
+
+                myShader.setUniform("scale", scale);
+                myShader.setUniform("center", [centerX, centerY]);
+            });
+        </script>
+    </body>
+</html>

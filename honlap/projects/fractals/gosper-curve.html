@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 2024. 04. 18. 15:19 -->
+        <title>Gosper Curve</title>
+
+        <style>
+            html, body {
+                margin: 0;
+                height: 100%;
+                overflow: hidden;
+                touch-action: none;
+
+                background-color: black;
+                background-image: linear-gradient(125deg, #222, black);
+            }
+
+            #myCanvas {
+                position: absolute; left: 50%; top: 50%;
+                transform: translate(-50%, -50%);
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+
+        <script>
+            // variables
+            const color = [ 
+                { r: 210, g: 168, b: 255 }, 
+                { r: 65, g: 178, b: 255 },
+                { r: 86, g: 211, b: 100 },
+                // { r: 172, g: 164, b: 65 },
+                { r: 255, g: 123, b: 114 },
+             ], lineWidth = 0.01;
+
+            const myCanvas = document.getElementById("myCanvas"), canv = myCanvas.getContext("2d"), size = Math.min(innerHeight, innerWidth) * .9, scalingFactor = 1 / Math.sqrt(7);
+            let previousIsDone = true;
+            const points = [{x:-1.25, y: -Math.sin(Math.PI/3)/2}, {x:1.25, y: Math.sin(Math.PI/3)/2}];
+            const translateVectors = [
+                { x: -1.25+.5,                            y: -Math.sin(Math.PI/3)/2+0},
+                { x: -1.25+1+Math.cos(Math.PI/3)/2,       y: -Math.sin(Math.PI/3)/2+Math.sin(Math.PI/3)/2},
+                { x: -1.25+.5+Math.cos(Math.PI/3),        y: -Math.sin(Math.PI/3)/2+Math.sin(Math.PI/3)},
+                { x: -1.25+Math.cos(Math.PI/3)/2,         y: -Math.sin(Math.PI/3)/2+Math.sin(Math.PI/3)*3/2},
+                { x: -1.25+.5,                            y: -Math.sin(Math.PI/3)/2+Math.sin(Math.PI/3)*2},
+                { x: -1.25+1.5,                           y: -Math.sin(Math.PI/3)/2+Math.sin(Math.PI/3)*2},
+                { x: -1.25+2+Math.cos(Math.PI/3)/2,       y: -Math.sin(Math.PI/3)/2+Math.sin(Math.PI/3)*3/2},
+            ];
+            const angle0 = Math.atan2(Math.sin(Math.PI/3), 2.5);
+            const rotationMatrices = [
+                [ // no rotation
+                    [Math.cos(-angle0), -Math.sin(-angle0)],
+                    [Math.sin(-angle0),  Math.cos(-angle0)]
+                ],
+                [ // -120 degree
+                    [Math.cos(-Math.PI*2/3-angle0), -Math.sin(-Math.PI*2/3-angle0)],
+                    [Math.sin(-Math.PI*2/3-angle0),  Math.cos(-Math.PI*2/3-angle0)]
+                ],
+                [ // +120 degree
+                    [Math.cos(Math.PI*2/3-angle0), -Math.sin(Math.PI*2/3-angle0)],
+                    [Math.sin(Math.PI*2/3-angle0),  Math.cos(Math.PI*2/3-angle0)]
+                ],
+            ];
+            const matrixIndex = [ 0, 1, 0, 2, 0, 0, 2 ];
+
+            let draw = () => {
+                previousIsDone = false;
+
+                let getColor = (x) => {
+                    let myX = x * (color.length-1);
+                    let map = (t, a, b) => { return parseInt(a + t * (b-a)) };
+                    let c1 = color[Math.floor(myX)], c2 = color[Math.floor(myX)+1];
+                    return "rgb(" + map(myX%1, c1.r, c2.r) + ", " + map(myX%1, c1.g, c2.g) + ", " + map(myX%1, c1.b, c2.b) + ")";
+                }
+
+                canv.clearRect(-10, -10, 20, 20);
+                canv.lineWidth = 0.5 / points.length**0.43;
+                for (let i = 0; i < points.length-1; i++) {
+                    setTimeout(() => {
+                        canv.beginPath();
+                        canv.moveTo(points[i].x, points[i].y);
+                        canv.lineTo(points[i+1].x, points[i+1].y);
+                        canv.strokeStyle = getColor(i / (points.length-1));
+                        canv.stroke();
+                        if (i == points.length-2) previousIsDone = true;
+                    }, i/points.length**.8*500);
+                }
+            }
+
+            let iterate = () => {
+                if (previousIsDone) {
+                    let temp = [];
+                    for (let i in points) temp[i] = {x: points[i].x*scalingFactor, y: points[i].y*scalingFactor};
+
+                    let setOrientation = (matrix, vector) => {
+                        return {
+                            x: matrix[0][0]*vector.x + matrix[0][1]*vector.y,
+                            y: matrix[1][0]*vector.x + matrix[1][1]*vector.y,
+                        }
+                    }
+
+                    let counter = 0;
+                    let calculateHexagon = (num, i) => {
+                        let coord = setOrientation(rotationMatrices[matrixIndex[num]], { x: temp[i].x, y: temp[i].y });
+                        points[counter] = { x: coord.x + translateVectors[num].x, y: coord.y + translateVectors[num].y };
+                        counter++;
+                    }
+
+                    for (let i = 0; i < temp.length; i++) calculateHexagon(0, i);
+                    for (let i = temp.length-2; i >= 0; i--) calculateHexagon(1, i);
+                    for (let i = temp.length-2; i >= 0; i--) calculateHexagon(2, i);
+                    for (let i = 1; i < temp.length; i++) calculateHexagon(3, i);
+                    for (let i = 1; i < temp.length; i++) calculateHexagon(4, i);
+                    for (let i = 1; i < temp.length; i++) calculateHexagon(5, i);
+                    for (let i = temp.length-2; i >= 0; i--) calculateHexagon(6, i);
+
+                    draw();
+                }
+            }
+            document.addEventListener('click', iterate);
+
+            let scale = .125;
+            let setup = () => {
+                myCanvas.width = size;
+                myCanvas.height = size;
+                canv.scale(size, -size);
+                canv.translate(0.575, -0.725);
+                canv.scale(.3, .3)
+                canv.strokeStyle = "green";
+                canv.lineWidth = lineWidth;
+                canv.lineCap = "round";
+
+                iterate();
+            }
+            setup();
+        </script>
+    </body>
+</html>

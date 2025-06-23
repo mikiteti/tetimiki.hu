@@ -1,0 +1,74 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- 2021. 09. 19. -->
+    <title>Sierpinski Háromszög</title>
+
+    <meta charset="utf-8">
+    <script src="../p5.min.js"></script>
+    <script>
+        var width = 1000; var height = 1000;
+        var n = 3, stop = true;
+
+        var tria_x = [];
+        var tria_y = [];
+        for (i = 0; i < n; i++) {
+            tria_x.push(width * 0.5 + Math.sin(i * Math.PI * 2 / n) * (width / 2 - 10));
+            tria_y.push(height * 0.5 - Math.cos(i * Math.PI * 2 / n) * (width / 2 - 10));
+        }
+
+        function setup() {
+            createCanvas(1000, 1000);
+            background(0);
+
+            stroke(0,255,255);
+            for (i = 0; i < n; i++) {
+                line(tria_x[i % n], tria_y[i % n], tria_x[(i + 1) % n], tria_y[(i + 1) % n]);
+            }
+            stroke(200);
+        }
+
+        var x = width * 0.5;
+        var y = height * 0.5;
+        var vertice = 0;
+        var counter = 0;
+        function draw() {
+            if (!stop) {
+                for (i = 0; i < 10; i++) {
+                    vertice = Math.floor(Math.random() * n);
+            
+                    let new_x = (x + tria_x[vertice]) / 2;
+                    let new_y = (y + tria_y[vertice]) / 2;
+                    if (counter > 1) {
+                        stroke(color(0, new_x, new_y));
+                        ellipse(new_x, new_y, 1, 1);
+                    }
+                    x = new_x;
+                    y = new_y;
+                }
+                counter++;
+
+                if (counter == 5000) {
+                    noLoop();
+                }
+            }
+        }
+
+        setTimeout(() => {
+            stop = false;
+        }, 2000);
+    </script>
+</head>
+<body style="background: black; overflow: hidden;" onkeyup="if (event.which == 32) { noloop = -noloop + 1 }">
+    <main style="width: 1000px; height: 1000px; position: absolute; left: calc(50% - 500px); top: calc(50% - 400px);"></main>
+
+    <script>
+        if (window.innerHeight < window.innerWidth) {
+            document.getElementsByTagName("main")[0].style.transform = "scale(" + window.innerHeight / 1000 * 0.9 + ")";
+        } else {
+            document.getElementsByTagName("main")[0].style.transform = "scale(" + window.innerWidth / 1000 * 0.9 + ")";
+        }
+    </script>
+</body>
+</html>

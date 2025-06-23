@@ -1,0 +1,29 @@
+﻿
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- 2021. 12. 26. 16:29 -->
+		<title>Dodekaéder</title>
+		<link rel="apple-touch-icon" href="img/common_favi_dark.jpg">
+		<meta charset="utf-8">
+
+        <script src="../p5.min.js"></script>
+        <script>
+            var phi = (1 + Math.sqrt(5)) / 2;
+            var x = [phi, phi, phi, phi, -phi, -phi, -phi, -phi, 0,       0,       0,        0,        phi + 1, phi + 1, -phi - 1, -phi - 1, 1,       -1,       1,       -1,       ];
+            var y = [phi, phi, -phi, -phi, phi, phi, -phi, -phi, phi + 1, phi + 1, -phi - 1, -phi - 1, 1,       -1,       1,       -1,       0,       0,       0,        0,        ];
+            var z = [phi, -phi, phi, -phi, phi, -phi, phi, -phi, 1,       -1,       1,       -1,       0,       0,       0,        0,        phi + 1, phi + 1, -phi - 1, -phi - 1,];
+            var sides =  ["1.18.3.13.12", "4.17.6.15.14", "3.11.10.2.13", "4.14.5.9.8", "3.18.19.7.11", "4.8.0.16.17", "1.9.5.19.18", "6.17.16.2.10", "8.9.1.12.0", "6.10.11.7.15", "0.12.13.2.16", "19.5.14.15.7"];
+            var sensitivity = 3;
+            const scale = 1500;
+            const time = 15;
+            const dist = 10;
+            const opacity = 0.5;
+        </script>
+    </head>
+	<body style="background-color: black; margin: 0; overflow: hidden; touch-action: none;" onmousedown="down();" onmousemove="move();" onmouseup="up();" ontouchstart="touchdown();" ontouchmove="touchmove();" ontouchend="up();">
+        <main style="width: 1000px; height: 1000px; position: absolute; left: calc(50% - 500px); top: calc(50% - 500px);"></main>
+
+        <script src="work.js"></script>
+    </body>
+</html>

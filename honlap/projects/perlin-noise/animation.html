@@ -1,0 +1,58 @@
+﻿
+<html>
+    <head>
+        <!-- 2022. 03. 26. 19:14 -->
+        <title>Perlin Zaj</title>
+
+        <meta charset="utf-8">
+
+        <script src="../p5.min.js"></script>
+        <script>
+            function setup() {
+                createCanvas(750, 750);
+                strokeWeight(5);
+            }
+
+            let zoff = 0,
+                radius = 1,
+                scale = 400,
+                quality = 500,
+            base, xPast, yPast, cos, sin, x, y, distance;
+            function draw() {
+                background(0);
+                translate(width / 2, height / 2);
+
+                xPast = noise(radius, 0, zoff) * scale;
+                yPast = 0;
+                for (i = 1; i <= quality/4; i++) {
+                    cos = Math.cos(i/quality*2*Math.PI);
+                    sin = Math.sin(i/quality*2*Math.PI);
+                    distance = scale * noise(cos * radius, sin * radius, zoff)
+                    x = distance * cos;
+                    y = distance * sin;
+                    base = Math.floor(i/quality*360);
+                    stroke("hsl(" + base + ", 50%, 50%)");
+                    line(xPast, yPast, x, y);
+                    stroke("hsl(" + (180-base) + ", 50%, 50%)");
+                    line(-xPast, yPast, -x, y);
+                    stroke("hsl(" + (360-base) + ", 50%, 50%)");
+                    line(xPast, -yPast, x, -y);
+                    stroke("hsl(" + (base+180) + ", 50%, 50%)");
+                    line(-xPast, -yPast, -x, -y);
+
+                    xPast = x;
+                    yPast = y;
+                }
+
+                zoff += 0.01;
+            }
+        </script>
+    </head>
+    <body style="background-color: black; margin: 0;">
+        <main style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);"></main>
+        <script>
+            var main = document.getElementsByTagName("main")[0];
+            main.style.transform += " scale(" + Math.min(innerHeight, innerWidth) / 750 + ")";
+        </script>
+    </body>
+</html>

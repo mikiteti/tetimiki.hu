@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 2024. 04. 17. 23:52 -->
+        <title>Hilbert Curve</title>
+
+        <style>
+            html, body {
+                margin: 0;
+                height: 100%;
+                overflow: hidden;
+                touch-action: none;
+
+                background-color: black;
+                background-image: linear-gradient(125deg, #222, black);
+            }
+
+            #myCanvas {
+                position: absolute; left: 50%; top: 50%;
+                transform: translate(-50%, -50%);
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+
+        <script>
+            // variables
+            const color = [ { r: 255, g: 0, b: 242 } , { r: 25, g: 222, b: 214 } ], lineWidth = 0.005;
+
+            const myCanvas = document.getElementById("myCanvas"), canv = myCanvas.getContext("2d"), size = Math.min(innerHeight, innerWidth) * .9;
+            let previousIsDone = true;
+            const points = [{ x: .5, y: .5}];
+
+            let draw = () => {
+                previousIsDone = false;
+
+                let getColor = (x) => {
+                    let map = (t, a, b) => { return parseInt(a + t * (b-a)) };
+                    return "rgb(" + map(x, color[0].r, color[1].r) + ", " + map(x, color[0].g, color[1].g) + ", " + map(x, color[0].b, color[1].b) + ")";
+                }
+
+                canv.clearRect(0, 0, 1, 1);
+                canv.lineWidth = 0.5 / points.length**0.5;
+                for (let i = 0; i < points.length-1; i++) {
+                    setTimeout(() => {
+                        canv.beginPath();
+                        canv.moveTo(points[i].x, points[i].y);
+                        canv.lineTo(points[i+1].x, points[i+1].y);
+                        canv.strokeStyle = getColor(i / (points.length-2));
+                        canv.stroke();
+                        if (i == points.length-2) previousIsDone = true;
+                    }, i/points.length**.66*500);
+                }
+            }
+
+            let iterate = () => {
+                if (previousIsDone) {
+                    let len = points.length;
+                    for (let i in points) points[i] = {x: points[i].x/2, y: points[i].y/2};
+
+                    // upper left
+                    for (let i = 0; i < len; i++) points[i+len] = { x: points[i].x, y: points[i].y+.5 };
+                    // upper right
+                    for (let i = 0; i < len; i++) points[i+2*len] = { x: points[i].x+.5, y: points[i].y+.5 };
+                    // lower right
+                    for (let i = 0; i < len; i++) points[i+3*len] = { x: .5-points[i].y+.5, y: .5-points[i].x };
+                    // lower left -- rotated last
+                    for (let i = 0; i < len; i++) points[i] = { x: points[i].y, y: points[i].x };
+
+
+                    draw();
+                }
+            }
+            document.addEventListener('click', iterate);
+
+            let setup = () => {
+                myCanvas.width = size;
+                myCanvas.height = size;
+                canv.scale(size, -size);
+                canv.translate(0, -1);
+                canv.strokeStyle = "green";
+                canv.lineWidth = lineWidth;
+                canv.lineCap = "round";
+
+                iterate();
+            }
+            setup();
+        </script>
+    </body>
+</html>

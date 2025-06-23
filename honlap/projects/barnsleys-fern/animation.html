@@ -1,0 +1,74 @@
+﻿
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- 2021. 09. 24. 20:16 -->
+		<title>Barnsley Páfrány</title>
+
+        <meta charset="utf-8">
+
+        <script src="../p5.min.js"></script>
+        <style>
+            html, body {
+                background-color: black; 
+                overflow: hidden;
+                height: 100%;
+                margin: 0;
+            }
+
+            main {
+                width: 1000px; height: 1750px;
+                position: absolute; left: 50%; top: 50%;
+                filter: brightness(2.5);
+            }
+        </style>
+    </head>
+	<body onclick="counter = 0; draw();">
+        <main></main>
+
+
+        <script>
+            document.getElementsByTagName("main")[0].style.transform = "translate(-50%, -50%) scale(" + (Math.min(window.innerWidth/1000, window.innerHeight/1750)) + ")";
+
+            let scale = 150;
+
+            function setup() {
+                createCanvas(1000, 1750);
+                background(0);
+
+                noStroke();
+                fill(color(0,100,0,40));
+            }
+
+            let x = 0, y = 0, ran, nextX, nextY;
+            let counter = 0;
+            function draw() {
+                if (counter > 100 && counter < 400) {
+                    for (i = 0; i < 1000; i++) {
+                        ran = Math.random();
+                        
+                        if (ran < .01) {
+                            nextX = 0;
+                            nextY *= .16;
+                        } else if (ran < .86) {
+                            nextX = .85*x + .04*y;
+                            nextY = -.04*x + .85*y + 1.6;
+                        } else if (ran < .93) {
+                            nextX = .2*x - .26*y;
+                            nextY = .23*x + .22*y + 1.6;
+                        } else {
+                            nextX = -.15*x + .28*y;
+                            nextY = .26*x + .24*y + .44;
+                        }
+                        x = nextX; y = nextY;
+
+                        // set(width * .45 + scale * x, height * .5 - scale * (y - 5), color(0, 255, 0));
+                        ellipse(width * .45 + scale * x, height * .5 - scale * (y - 5), 2);
+                    }
+                }
+
+                counter++;
+            }
+        </script>
+    </body>
+</html>

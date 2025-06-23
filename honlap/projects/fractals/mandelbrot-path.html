@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- 2021. 10. 17. 0:04 -->
+    <title>Mandelbrot set</title>
+    <meta charset="utf-8">
+    <script>console.log('%cCOPYRIGHT © 2021 TÉTI MIKI. ALL RIGHTS RESERVED.', 'color: green; font-weight: bold')</script>
+</head>
+<body onmousemove="move(event.clientX, event.clientY);" ontouchmove="move(event.touches[0].clientX, event.touches[0].clientY);" style="margin: 0; overflow: hidden; background-color: black; touch-action: none;">
+    <img id="img" src="img/mandelbrot-set.png" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);" alt="">
+    <canvas id="canvas2" style="position: absolute;"></canvas>
+
+    <script>
+        document.getElementById("img").width = innerWidth;
+
+        var minval = -2.2; var maxval = 1.2;
+        var w = innerWidth; var h = innerHeight;
+        var vert_scale = (maxval - minval) / w;
+        var hori_scale = (maxval - minval) / w;
+        var iterations = 200;
+
+
+        var canvas2 = document.getElementById("canvas2");
+        var ctx = canvas2.getContext("2d");
+        canvas2.width = w; canvas2.height = h;
+        ctx.strokeStyle = 'rgb(0, 110, 110)';
+        ctx.fillStyle = 'rgb(0, 217, 217)';
+        ctx.lineWidth = 2;
+
+        function move(cx, cy) {
+            ctx.clearRect(0, 0, w, h);
+            var coord = [];
+            let a = cx * vert_scale + minval;
+            let b = (h * .5 - cy) * hori_scale;
+
+            let a1 = 0; let b1 = 0;
+            for (i = 0; i < iterations; i++) {
+                let a2 = a1 * a1 - b1 * b1; 
+                let b2 = 2 * a1 * b1;
+                a1 = a2 + a;
+                b1 = b2 + b;
+                coord.push(Math.round((a1 - minval) / vert_scale));
+                coord.push(Math.round(-b1 / hori_scale + h * .5));
+            }
+
+            for (i = 0; i < iterations; i++) {
+                ctx.beginPath();
+                ctx.moveTo(coord[2*i], coord[2*i + 1]);
+                ctx.lineTo(coord[2*i + 2], coord[2*i + 3]);
+                ctx.stroke();
+            }
+
+            for (i = 0; i < iterations; i++) {
+                ctx.beginPath();
+                ctx.arc(coord[2*i], coord[2*i + 1], 5, 0, 2*Math.PI);
+                ctx.fill();
+            }
+        }
+    </script>
+</body>
+</html>

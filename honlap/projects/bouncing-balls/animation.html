@@ -1,0 +1,75 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- 2021. 08. 25. 7:28 -->
+
+    <title>Pattogós Labdák</title>
+    <meta charset="utf-8">
+    <script src="../p5.min.js"></script>
+    <script>
+        var x0 = 0.0004; var y0 = -0.5;
+        var num = 1000;
+        var size = 50;
+        var g = 9.8;
+    
+        var x = []; var y = [];
+        var vx = []; var vy = [];
+        var timestep = 0.00005;
+        var colors = [];
+        var stop = 0;
+
+        function setup() {
+            createCanvas(1000, 1000);
+            if (window.innerWidth < window.innerHeight) { document.getElementById("main").style.transform = "scale(" + (window.innerWidth * 0.9 / 1000) + ")"; } else { document.getElementById("main").style.transform = "scale(" + (window.innerHeight * 0.9 / 1000) + ")"; }
+
+            for (i = 0; i < num; i++) {
+                x.push(x0 + i / num * 0.001);
+                y.push(y0);
+                vx.push(0);
+                vy.push(0);
+                // colors.push(color('hsl(' + Math.floor(i / num * 360) + ', 100%, 50%)'));
+                colors.push(color('hsl(' + Math.floor(225 - (225 - 164) * i / num) + ', ' + Math.floor(72.7 + (96.5 - 72.7) * i / num) + '%, ' + Math.floor(56.9 - (56.9 - 33.5) * i / num) + '%)'));
+            }
+
+            strokeWeight(7);
+        }
+
+        function draw() {
+            if (!stop) {
+                background(0);
+                noStroke();
+                for (n = 0; n < num; n++) {
+                    var magnitude = x[n] * x[n] + y[n] * y[n];
+                    if (magnitude < 1) {
+                        vy[n] += g;
+                    } else {
+                        let vy2 = (-y[n] * vy[n] - x[n] * vx[n]);
+                        let vx2 = (y[n] * vx[n] - x[n] * vy[n]);
+                        vy[n] = (y[n] * vy2 - x[n] * vx2) / magnitude;
+                        vx[n] = (x[n] * vy2 + y[n] * vx2) / magnitude;
+                    }
+                    
+                    y[n] += vy[n] * timestep;
+                    x[n] += vx[n] * timestep;
+
+                    fill(colors[n]);
+                    ellipse(width / 2 + x[n] * 400, height / 2 + y[n] * 400, size, size);
+                }
+
+                // let v = color('hsl(271, 60%, 50%)'); // blueviolet
+                let v = color('hsl(194, 85%, 45%)'); // average
+                stroke(v);
+                noFill();
+                ellipse(width / 2, height / 2, 814 + size, 814 + size);
+            }
+        }
+        
+        window.addEventListener('keydown', function () { if (event.which == 32) stop = 1 - stop; })
+        window.addEventListener('click', function () { stop = 1 - stop; })
+    </script>
+</head>
+<body style="background: black; overflow: hidden;">
+    <main id="main" style="width: 1000px; height: 1000px; position: absolute; left: calc(50% - 500px); top: calc(50% - 500px);"></main>
+</body>
+</html>

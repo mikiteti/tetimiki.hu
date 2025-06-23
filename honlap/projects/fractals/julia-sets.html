@@ -1,0 +1,163 @@
+<html>
+    <head>
+        <!-- 2024. 05. 01. 10:17 -->
+        <title>Julia Sets Zoom</title>
+        <meta charset="utf-8">
+        <script>console.log('%cCOPYRIGHT © 2021 TÉTI MIKI. ALL RIGHTS RESERVED.', 'color: green; font-weight: bold');</script>
+        <script src="../p5.min.js"></script>
+
+        <style>
+            html, body {
+                /* background: linear-gradient(135deg, #6f00ff, #ff9500); */
+                background: black;
+
+                margin: 0;
+                overflow: hidden;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <main></main>
+
+        <script>
+            console.log("scroll to zoom, press mouse to offset, hold ctrl to change seed value")
+
+            let myShader, mouseX=innerWidth/2, mouseY=innerHeight/2, scale = 4, centerX = 0, centerY = 0, maxIterations = 1000, mouseIsDown = false, mX = -0.7704166666666669, mY = -0.31683333333333336;
+
+            let vert = `
+                attribute vec3 aPosition;
+                attribute vec2 aTexCoord;
+
+                varying vec2 pos;
+
+                void main() {
+                    pos = aTexCoord;
+
+                    vec4 position = vec4(aPosition, 1.);
+                    position.xy = position.xy * 2. - 1.;
+
+                    gl_Position = position;
+                }
+            `, 
+            frag = `
+                precision mediump float;
+
+                varying vec2 pos;
+
+                uniform vec2 u_size;
+                uniform float scale;
+                uniform int u_max;
+                uniform vec2 center;
+                uniform vec2 mousePosition;
+
+                float remap( float minval, float maxval, float curval )
+                {
+                    return ( curval - minval ) / ( maxval - minval );
+                }
+
+                const float number_of_colors = 5.;
+                const vec3 col1 = vec3(0.314,0.361,0.549);
+                const vec3 col2 = vec3(1.000,1.000,1.000);
+                const vec3 col3 = vec3(0.647,0.557,0.796);
+                const vec3 col4 = vec3(0.855,0.925,0.729);
+                const vec3 col5 = vec3(0.831,0.549,0.549);
+
+
+                void main() {
+                    vec3 col = vec3(0., 0., 0.);
+                    vec2 z = (pos-.5) * u_size * scale + center;
+
+                    bool inside = true;
+                    const int max = 100000;
+                    for (int i = 0; i < max; ++i) {
+                        if (z.x*z.x + z.y*z.y < 4.) {
+                            float tempx = z.x*z.x - z.y*z.y;
+                            z.y = 2. * z.x * z.y + mousePosition.y;
+                            z.x = tempx + mousePosition.x;
+                        } else {
+                            float u = mod(float(i) + 1. - log(log(z.x*z.x+z.y*z.y))/log(2.), 50.) / 50.;
+
+
+                            if( u < 1./number_of_colors )
+                                col = mix(col1, col2, remap( 0., 1./number_of_colors, u ) );
+                            else if (u < 2./number_of_colors)
+                                col = mix(col2, col3, remap( 1./number_of_colors, 2./number_of_colors, u ) );
+                            else if (u < 3./number_of_colors)
+                                col = mix(col3, col4, remap( 2./number_of_colors, 3./number_of_colors, u ) );
+                            else if( u < 4./number_of_colors)
+                                col = mix(col4, col5, remap( 3./number_of_colors, 4./number_of_colors, u ) );
+                            else 
+                                col = mix(col5, col1, remap( 4./number_of_colors, 5./number_of_colors, u ) );
+
+                            break;
+                        }
+
+                        if (i > u_max) {
+                            break;
+                        }
+                    }
+
+                    gl_FragColor = vec4(col, 1.0);
+                }
+            `;
+
+            function setup() {
+                createCanvas(innerWidth, innerHeight, WEBGL);
+                noStroke();
+
+                myShader = createShader(vert, frag);
+
+                shader(myShader);
+                myShader.setUniform("u_size", [innerWidth / max(innerHeight, innerWidth), innerHeight / max(innerHeight, innerWidth)]);
+                myShader.setUniform("scale", scale);
+                myShader.setUniform("u_max", maxIterations);
+                myShader.setUniform("center", [centerX, centerY]);
+                myShader.setUniform("mousePosition", [mX, mY]);
+            }
+
+            function draw() {
+                clear();
+
+                rect();
+            }
+
+
+            window.addEventListener("mousedown", function (e) { mouseIsDown = true; });
+
+            window.addEventListener("mousemove", function (e) {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+
+                if (e.ctrlKey) {
+                    mX += e.movementX / Math.max(innerWidth, innerHeight) * scale;
+                    mY -= e.movementY / Math.max(innerWidth, innerHeight) * scale;
+                    myShader.setUniform("mousePosition", [mX, mY]);
+                } else if (mouseIsDown) {
+                    centerX -= (e.movementX)*(1 / Math.max(innerWidth, innerHeight))*scale;
+                    centerY += (e.movementY)*(1 / Math.max(innerWidth, innerHeight))*scale;
+
+                    myShader.setUniform("center", [centerX, centerY]);
+                }
+            });
+
+            window.addEventListener("mouseup", function (e) { mouseIsDown = false; });
+
+            window.addEventListener("wheel", function (e) {
+                let dY = e.deltaY;
+
+                centerX += (mouseX-innerWidth *.5)*(1 / Math.max(innerWidth, innerHeight))*scale;
+                centerY -= (mouseY-innerHeight*.5)*(1 / Math.max(innerWidth, innerHeight))*scale;
+
+                scale *= Math.pow(1.001, dY);
+
+                centerX -= (mouseX-innerWidth *.5)*(1 / Math.max(innerWidth, innerHeight))*scale;
+                centerY += (mouseY-innerHeight*.5)*(1 / Math.max(innerWidth, innerHeight))*scale;
+
+
+                myShader.setUniform("scale", scale);
+                myShader.setUniform("center", [centerX, centerY]);
+            });
+        </script>
+    </body>
+</html>

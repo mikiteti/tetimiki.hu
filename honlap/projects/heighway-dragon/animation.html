@@ -1,0 +1,119 @@
+﻿
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 2021. 09. 15. 19:34 -->
+        <title>Heighway Sárkány</title>
+
+        <meta charset="utf-8">
+        
+        <link href="https://fonts.googleapis.com/css2?family=Nova+Mono&display=swap" rel="stylesheet">
+        <style>
+            body {
+                touch-action: manipulation;
+                font-family: 'Nova Mono', monospace;
+                -moz-user-select: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -user-select: none;
+                background-color: black; 
+                overflow: hidden; 
+                margin: 0; 
+                height: 100%;
+            }
+
+            #n {
+                font-size: 40px; 
+                color: rgb(200, 200, 200); 
+                position: absolute; 
+                left: 60px; 
+                top: 30px;
+            }
+        </style>
+
+        <script src="../p5.min.js"></script>
+    </head>
+    <body onclick="better();">
+        <p id="n">0</p>
+        <main style="width: 1000px; height: 850px; position: absolute; left: calc(50% - 500px); top: calc(50% - 425px); filter: brightness(150%);"></main>
+
+        <script>
+            document.body.style.height = (window.innerHeight - 16) + "px";
+            if (window.innerHeight < window.innerWidth) {
+                document.getElementsByTagName("main")[0].style.transform = "scale(" + window.innerHeight / 850 + ")";
+            } else {
+                document.getElementsByTagName("main")[0].style.transform = "scale(" + window.innerWidth / 1000 + ")";
+            }
+
+
+            var x_coord = [0.25, 0.75];
+            var y_coord = [0.5, 0.5];
+    
+            var x_coord2 = [];
+            var y_coord2 = [];
+            var x_coord3 = [];
+            var y_coord3 = [];
+    
+            var x; var y; var n = 0;
+            function better() {
+                x_coord2 = []; y_coord2 = []; x_coord3 = []; y_coord3 = [];
+    
+                for (i = 0; i < x_coord.length - 1; i++) {
+                    if (y_coord[i + 1] == y_coord[i]) {
+                        x = (x_coord[i] + x_coord[i + 1]) / 2;
+                        y = y_coord[i] + (i % 2 - 0.5) * (x_coord[i] - x_coord[i + 1]);
+                    } if (x_coord[i + 1] == x_coord[i]) {
+                        x = x_coord[i] + (i % 2 - 0.5) * (y_coord[i + 1] - y_coord[i]);
+                        y = (y_coord[i] + y_coord[i + 1]) / 2;
+                    } if (x_coord[i + 1] - x_coord[i] == y_coord[i + 1] - y_coord[i]) {
+                        x = x_coord[i + i % 2];
+                        y = y_coord[i + (i + 1) % 2];
+                    } if (x_coord[i] - x_coord[i + 1] == y_coord[i + 1] - y_coord[i]) {
+                        x = x_coord[i + (i + 1) % 2];
+                        y = y_coord[i + i % 2];
+                    }
+    
+                    x_coord2.push(x);
+                    y_coord2.push(y);
+                }
+                for (i = 0; i < x_coord2.length; i++) {
+                    x_coord3.push(x_coord[i]);
+                    x_coord3.push(x_coord2[i]);
+                    y_coord3.push(y_coord[i]);
+                    y_coord3.push(y_coord2[i]);
+                }
+                x_coord3.push(x_coord[x_coord.length - 1]);
+                y_coord3.push(y_coord[y_coord.length - 1]);
+    
+                x_coord = []; y_coord = [];
+                for (i = 0; i < x_coord3.length; i++) {
+                    x_coord.push(x_coord3[i]);
+                    y_coord.push(y_coord3[i]);
+                }
+    
+                n++;
+                document.getElementById("n").innerHTML = n;
+                draw();
+            }
+
+            function setup() {
+                createCanvas(1000, 850);
+                stroke(200);
+            }
+            
+            function draw() {
+                background(0);
+                for (i = 0; i < x_coord.length - 1; i++) {
+                    let x1 = map(x_coord[i], .1, .9, (width - height) / 2, (width + height) / 2);
+                    let x2 = map(x_coord[i + 1], .1, .9, (width - height) / 2, (width + height) / 2);
+                    let y1 = map(y_coord[i], .1, .9, 0, height);
+                    let y2 = map(y_coord[i + 1], .1, .9, 0, height);
+    
+                    stroke(color("hsl(" + Math.round(Math.abs(x1 - y1) / 10 + 215) + ", 100%, 50%)"));
+                    line(x1, y1, x2, y2);
+                }
+                noLoop();
+            }
+        </script>
+    </body>
+</html>

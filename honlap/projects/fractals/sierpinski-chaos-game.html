@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 2024. 04. 18. 21:11 -->
+        <title>Sierpinski Triangle</title>
+
+        <style>
+            html, body {
+                margin: 0;
+                height: 101%;
+                overflow: hidden;
+
+                background-color: black;
+                background-image: linear-gradient(125deg, #222, black);
+            }
+
+            canvas {
+                position: absolute; left: 50%; top: 50%;
+                transform: translate(-50%, -50%);
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+
+        <script>
+            const myCanvas = document.getElementById("myCanvas"), canv = myCanvas.getContext("2d"), size = Math.min(innerHeight*2/Math.sqrt(3), innerWidth) * .9;
+            let iterationCount = 0;
+
+            let x = myCanvas.width/2, y = myCanvas.height/2, num = 0;
+            let draw = () => {
+                for (let i = 0; i < 500; i++) {
+                    setTimeout(() => {
+                        let corners = [[0, myCanvas.height-2], [myCanvas.width/2, 0], [myCanvas.width, myCanvas.height-2]];
+                        let ind = Math.floor(Math.random()*3);
+
+                        x += (corners[ind][0]-x)*.5;
+                        y += (corners[ind][1]-y)*.5;
+
+                        num++;
+
+                        if (num > 10 && num < 4000) {
+                            // canv.fillStyle = "rgb(" + Math.floor(x/myCanvas.width*255) + ", " + Math.floor(y/myCanvas.height*255) + ", 255)";
+                            canv.fillStyle = "#aaa";
+                            canv.beginPath();
+                            canv.arc(x, y, .5, 0, 2*Math.PI);
+                            canv.fill();
+                        }
+                    }, 2*i);
+                }
+            }
+            document.addEventListener('click', ()=> {
+                setInterval(() => {
+                    draw();
+                }, 1000);
+            }, {once: true});
+
+            let setup = () => {
+                myCanvas.width = size;
+                myCanvas.height = size*Math.sqrt(3)/2;
+
+                canv.strokeStyle = "white";
+                canv.beginPath();
+                canv.moveTo(0, myCanvas.height-2);
+                canv.lineTo(myCanvas.width/2, 0);
+                canv.lineTo(myCanvas.width, myCanvas.height-2);
+                canv.lineTo(0, myCanvas.height-2);
+                canv.stroke();
+            }
+            setup();
+        </script>
+    </body>
+</html>

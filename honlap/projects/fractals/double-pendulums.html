@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 2024. 04. 07. 23:27 -->
+        <title>Kettős Ingák</title>
+
+        <meta charset="utf-8">
+        <style>
+            html, body {
+                margin: 0;
+                height: 100%;
+                overflow: hidden;
+                background-color: black;
+                background-image: linear-gradient(125deg, #225, #111);
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+
+        <script>
+            // m1=m2=l1=l2=1
+            const fps = 60, num = 500, width = .01, g = 10, dt = 0.01, color1 = [255, 193, 0], color2 = [255, 96, 0];
+
+            const myCanvas = document.getElementById("myCanvas"), canv = myCanvas.getContext('2d'), pendulum = [], dtp2 = dt / 2, dtp6 = dt / 6;
+
+            let derivative = (t1, t2, w1, w2) => { // in: data about state --> out: w1', w2'
+                let c1 = 3 - Math.cos(t1+t1 - (t2+t2)),
+                    c2 = Math.cos(t1 - t2),
+                    c3 = 2*Math.sin(t1 - t2),
+                    c4 = w1**2,
+                    c5 = w2**2;
+
+                return {
+                    b1: (-g*(3*Math.sin(t1)+Math.sin(t1 - (t2+t2))) - c3*(c5 + c4 * c2)) / c1,
+                    b2: (c3*(c4 + c4 + (g+g) * Math.cos(t1) + c5 * c2)) / c1,
+                    // b1: (-g*(3*Math.sin(t1)+Math.sin(t1 - (t2+t2))) - 2*Math.sin(t1-t2)*(w2**2 + w1**2 * Math.cos(t1-t2))) / (3 - Math.cos(t1+t1 - (t2+t2))),
+                    // b2: (2*Math.sin(t1-t2)*(2 * w1**2 + 2*g*Math.cos(t1) + w2**2 * Math.cos(t1-t2))) / (3 - Math.cos(t1+t1 - (t2+t2))),
+                }
+            }
+
+            let updatePositions = () => { // RK4-solver
+                for (let p of pendulum) {
+
+                    let k1 = derivative(p.t1, p.t2, p.w1, p.w2),
+                        k2 = derivative(p.t1, p.t2, p.w1 + dtp2*k1.b1, p.w2 + dtp2*k1.b2),
+                        k3 = derivative(p.t1, p.t2, p.w1 + dtp2*k2.b1, p.w2 + dtp2*k2.b2),
+                        k4 = derivative(p.t1, p.t2, p.w1 + dt  *k3.b1, p.w2 + dt  *k3.b2);
+
+                    p.w1 += dtp6 * (k1.b1 + k2.b1 + k2.b1 + k3.b1 + k3.b1 + k4.b1);
+                    p.w2 += dtp6 * (k1.b2 + k2.b2 + k2.b2 + k3.b2 + k3.b2 + k4.b2);
+
+                    p.t1 += dt * p.w1;
+                    p.t2 += dt * p.w2;
+                }
+            }
+
+            let draw = () => { // render
+                canv.clearRect(-innerWidth/2, -innerHeight/2, innerWidth, innerHeight);
+
+                for (let p of pendulum) {
+                    let pos = p.positions();
+
+                    canv.beginPath();
+
+                    canv.moveTo(0,0);
+                    canv.lineTo(pos.x1, pos.y1);
+                    canv.lineTo(pos.x2, pos.y2);
+
+                    canv.strokeStyle = p.color;
+                    canv.stroke();
+                }
+            }
+
+            let loop = () => { // main loop
+                updatePositions();
+                draw();
+            }
+
+            let setup = () => { // setup everything
+                myCanvas.width = innerWidth;
+                myCanvas.height = innerHeight;
+                
+                canv.translate(innerWidth/2, innerHeight/2);
+                canv.scale(Math.min(innerWidth, innerHeight) / 4.5, Math.min(innerWidth, innerHeight) / 4.5);
+                canv.lineWidth = width;
+
+                
+                let map = (x, from, to) => { return parseInt(from + (to-from)*x/num); } // just for rgb colors
+                for (let i = 0; i < num; i++) { // initialize pendulums
+                    pendulum.push({
+                        t1: 4/5 * Math.PI - .001 / num * i,
+                        t2: 3/4 * Math.PI,
+                        w1: 0,
+                        w2: 0,
+                        positions() {
+                            let x1 = Math.sin(this.t1),
+                                y1 = Math.cos(this.t1),
+                                x2 = Math.sin(this.t2) + x1,
+                                y2 = Math.cos(this.t2) + y1;
+
+                            return { x1: x1, y1: y1, x2: x2, y2: y2 };
+                        },
+                        color: "rgb(" + map(i, color1[0], color2[0]) + ", " + map(i, color1[1], color2[1]) + ", " + map(i, color1[2], color2[2]) + ")",
+                    });
+                }
+
+                setInterval(() => { // start main loop
+                    loop();
+                }, 1000 / fps);
+            }
+            setup();
+        </script>
+    </body>
+</html>

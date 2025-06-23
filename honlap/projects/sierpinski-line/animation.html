@@ -1,0 +1,74 @@
+﻿
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- 2022. 02. 05. 15:41 -->
+		<title>Sierpinski Vonal</title>
+		<meta charset=”utf-8”>
+
+        <script src="../p5.min.js"></script>
+    </head>
+	<body style="background-color: black; height: 100%;" onclick="if (c) triple();">
+        <main style="width: 1000px; height: 1000px; position: absolute; left: calc(50% - 500px); top: calc(50% - 500px);"></main>
+
+        <script>
+            var xy = [0], pm = [1], a = 0, l = 800, c = true;
+
+            function triple() {
+                    var newxy = [], newpm = [];
+                    for (i = 0; i < xy.length; i++) {
+                        if (!xy[i]) {
+                            newxy.push(1, 0, 1);
+                            newpm.push(pm[i], 1, 1);
+                        } else {
+                            newxy.push(0, 1, 0);
+                            newpm.push(pm[i], -1, -1);
+                        }
+                    }
+                    xy = newxy;
+                    pm = newpm;
+                    l /= 2;
+                    a++;
+                    console.log(pm);
+                    draw();
+            }
+
+            function setup() {
+                createCanvas(1000, 1000);
+                stroke(255);
+                strokeWeight(5);
+                noLoop();
+                fill(color("rgba(0, 0, 0, 0.1)"));
+            }
+
+            function draw() {
+                c = false;
+                background(0);
+                let x = 100, y = 850, angle = Math.PI / 3 * ((a+1) % 2 - 1);
+
+                for (let i = 0; i < pm.length; i++) {
+                    setTimeout(() => {
+                        stroke(color(color('hsl(' + Math.floor(225 - (225 - 164) * i / pm.length) + ', ' + Math.floor(72.7 + (96.5 - 72.7) * i / pm.length) + '%, ' + Math.floor(56.9 - (56.9 - 33.5) * i / pm.length) + '%)')));
+                        let x1 = Math.cos(angle) * l, y1 = Math.sin(angle) * l;
+
+                        line(x, y, x + x1, y + y1);
+                        x += x1;
+                        y += y1;
+
+                        angle += Math.PI / 3 * pm[i+1];
+                    }, i * l / 2);
+                }
+                setTimeout(() => {
+                    c = true;
+                }, pm.length * l / 2);
+            }
+
+
+            if (window.innerHeight < window.innerWidth) {
+                document.getElementsByTagName("main")[0].style.transform = 'scale(' + window.innerHeight / 1000 * 0.9 + ")";
+            } else {
+                document.getElementsByTagName("main")[0].style.transform = 'scale(' + window.innerWidth / 1000 * 0.9 + ")";
+            }
+        </script>
+    </body>
+</html>

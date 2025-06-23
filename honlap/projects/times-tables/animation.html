@@ -1,0 +1,95 @@
+﻿
+<html>
+<head>
+    <!--2021. 05. 23. 10:53-->
+    <title>Szorzótáblák</title>
+    
+    <meta charset="UTF-8">
+
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            overflow: hidden;
+            margin: 0;
+            height: 100%;
+        }
+
+        .stick {
+            width: 3px;
+            position: absolute;
+            background-color: #25ca7f;
+            border-radius: 50%;
+        }
+
+        #input {
+            outline: none; 
+            font-size: 15vmin;
+            line-height: 15vmin;
+            height: 15vmin;
+            position: absolute; 
+            top: 1vh;
+            left: 2vmin;
+            font-family: 'Pacifico', cursive; 
+            color: #25ca7f; 
+            width: auto; 
+            background-color: transparent; 
+            border: none;
+        }
+
+        #container {
+            width: 600px; 
+            height: 600px; 
+            position: absolute; 
+            left: calc(50% - 300px); 
+            top: calc(50% - 300px);
+        }
+    </style>
+</head>
+<body style="background-color: black; touch-action: manipulation" onclick="go *= -1;">
+    <input id="input" onclick="go = 1; this.value = '';" type="tel" onkeyup="multi = parseInt(this.value); animate();">
+    <div id="container"></div>
+
+    <script>
+        //nice: 2, 3, 21, 29, 33, 34, 45, 49, 51, 58, 65, 67, 73, 76, 79, 80, 86, 91, 99, 100, 101, 176, 198, 199
+        let up = [], left = [], sticks = [], multi = 0, container = document.getElementById("container"), go = 1;
+
+        for (i = 0; i < 200; i++) {
+            let stick = document.createElement("div");
+            stick.classList.add("stick");
+            container.append(stick);
+            sticks.push(stick);
+        } for (i = 0; i < 200; i++ ) {
+            left.push(Math.cos(i / 100 * Math.PI) * 300);
+            up.push(Math.sin(i / 100 * Math.PI) * 300);
+        }
+
+        function animate() {
+            for (i = 0; i < 200; i++) {
+                let length = Math.hypot(left[Math.round((multi * i) % 200)] - left[i], up[Math.round((multi * i) % 200)] - up[i]);
+
+                sticks[i].style.height = (length) + "px";
+                sticks[i].style.left = "calc(50% - " + ((left[Math.round((multi * i) % 200)] + left[i]) / 2 + 1.5) + "px)";
+                sticks[i].style.top = "calc(50% - " + ((up[Math.round((multi * i) % 200)] + up[i]) / 2 + length / 2) + "px)";
+                sticks[i].style.transform = "rotate(" + (-Math.atan((left[Math.round((multi * i) % 200)] - left[i]) / (up[Math.round((multi * i) % 200)] - up[i]))) + "rad)";
+            }
+            if (go == 1) {
+                multi += 0.002;
+                document.getElementById("input").value = Math.round(multi * 10) / 10;
+            }
+        } animate();
+        setTimeout(() => {
+            setInterval(() => {
+                animate();
+            }, 2);
+        }, 2000);
+
+        if (window.innerHeight < window.innerWidth) {
+            container.style.transform = "scale(" + (window.innerHeight / 600 * 0.8) + ")";
+            document.getElementById("circle").style.transform = "scale(" + (window.innerHeight / 600 * 0.8) + ")";
+        } else {
+            container.style.transform = "scale(" + (window.innerWidth / 600 * 0.8) + ")";
+            document.getElementById("circle").style.transform = "scale(" + (window.innerWidth / 600 * 0.8) + ")";
+        }
+    </script>
+</body>
+</html>

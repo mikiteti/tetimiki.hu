@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- 2024. 04. 16. 9:19 -->
+        <title>Lorenz Attraktor</title>
+
+        <style>
+            html, body {
+                margin: 0;
+                height: 100%;
+                overflow: hidden;
+                touch-action: none;
+
+                background-image: linear-gradient(125deg, #225, #222);
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas"></canvas>
+
+        <script>
+            // variables
+            const scale = 50, num = 5000, fps = 240, dt = 0.005, translate = [-0, 20], color = "orange", lineWidth = .1, sensitivity = 0.005;
+            let x = -13.257549640753666, y = -5.279852757206789, z = 40.30604702319551, theta = 0, phi = 0;
+            let cx = 0, cy = 0, cz = -23;
+
+            // variables2
+            const myCanvas = document.getElementById("myCanvas"), canv = myCanvas.getContext("2d"), coord = [];
+            const sigma = 10, beta = 8/3, rho = 28;
+            let base1, base2, mouseX = 0, mouseY = 0, mouseIsDown = false;
+
+            let rotate = (vec, base) => {
+                let myVec = { x: vec.x - cx, y: vec.y - cy, z: vec.z - cz};
+                let res = {
+                    x: base[0][0]*vec.x + base[0][1]*vec.y + base[0][2]*vec.z,
+                    y: base[1][0]*vec.x + base[1][1]*vec.y + base[1][2]*vec.z,
+                    z: base[2][0]*vec.x + base[2][1]*vec.y + base[2][2]*vec.z,
+                }
+                return { x: res.x + cx, y: res.y + cy, z: res.z + cz};
+            }
+
+            let loop = () => {
+                // update coordinates
+                let dx = sigma * (y - x),
+                    dy = x * (rho - z) - y,
+                    dz = x * y - beta * z;
+               
+                x += dx * dt;
+                y += dy * dt;
+                z += dz * dt;
+               
+                coord.push({x:x, y:y, z:z});
+                if (coord.length > num) coord.shift();
+
+                // rotate
+                let cost = Math.cos(theta), sint = Math.sin(theta);
+                base1 = [
+                    [cost, -sint, 0],
+                    [sint, cost,  0],
+                    [0,    0,     1]
+                ];
+                let cosp = Math.cos(phi), sinp = Math.sin(phi);
+                base2 = [
+                    [1, 0, 0],
+                    [0, cosp, -sinp],
+                    [0, sinp, cosp]
+                ]
+
+                // draw
+                canv.clearRect(-1000, -1000, 2000, 2000);
+
+                canv.beginPath();
+                let v = rotate(rotate(coord[0], base1), base2);
+                canv.moveTo(v.x, v.z);
+                for (let i = 1; i < coord.length; i++) {
+                    v = rotate(rotate(coord[i], base1), base2);
+                    canv.lineTo(v.x, v.z);
+                }
+                canv.stroke();
+            }
+
+            let setup = () => {
+                myCanvas.width = innerWidth;
+                myCanvas.height = innerHeight;
+                canv.translate(innerWidth/2, innerHeight/2);
+                canv.scale(Math.min(innerWidth, innerHeight) / scale, -Math.min(innerWidth, innerHeight) / scale);
+                canv.strokeStyle = color;
+                canv.lineWidth = lineWidth;
+                canv.translate(translate[0], translate[1]);
+
+                setInterval(() => {
+                    loop();
+                }, 1000 / fps);
+
+                document.addEventListener("mousemove", (e) => { move(e.clientX, e.clientY); });
+                document.addEventListener("mousedown", () => { mouseIsDown = true; });
+                document.addEventListener("mouseup", () => { mouseIsDown = false; });
+            }
+            setup();
+
+            let move = (X, Y) => {
+                if (mouseIsDown) {
+                    theta += (X - mouseX) * sensitivity;
+                    console.log(X-mouseX);
+                    phi   += (Y - mouseY) * sensitivity;
+                }
+
+                    mouseX = X;
+                    mouseY = Y;
+            }
+        </script>
+    </body>
+</html>
