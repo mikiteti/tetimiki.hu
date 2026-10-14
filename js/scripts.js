@@ -101,9 +101,65 @@ Function First Load
 function FirstLoad() {
     // <my things>
     if (document.getElementById("share") != undefined) {
-        $("#menu-overlay").html('<div id="close-menu"></div><div class="outer"><div class="inner"><nav><ul class="main-menu"><li class="mp"><a class="ajax-link menu-link" data-type="page-transition" href="../../index.html"><span></span>Kezdőlap</a></li><li class="mp has-sub active"><a href="#"><span></span>Galéria</a><ul><li><a class="ajax-link" data-type="page-transition" href="../../gallery.html">Minden</a></li><li><a class="ajax-link" data-type="page-transition" href="../../chaos.html">Káosz</a></li><li><a class="ajax-link" data-type="page-transition" href="../../fractal.html">Fraktál</a></li><li><a class="ajax-link" data-type="page-transition" href="../../3d.html">3D</a></li><li><a class="ajax-link" data-type="page-transition" href="../../games.html">Játékok</a></li><li><a class="ajax-link" data-type="page-transition" href="../../other.html">Minden Más</a></li></ul></li><li class="mp"><a class="ajax-link menu-link" data-type="page-transition" href="../../about.html"><span></span>Rólam</a></li><li class="mp"><a class="ajax-link menu-link" data-type="page-transition" href="../../contact.html"><span></span>Kapcsolat</a></li></ul></nav></div></div>');
+        $("#menu-overlay").html(`
+            <div id="close-menu"></div>
+            <div class="outer">
+                <div class="inner">
+                    <nav>
+                        <ul class="main-menu">
+                            <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
+                                    href="../../index.html"><span></span>Kezdőlap</a></li>
+                            <li class="mp has-sub active"><a href="#"><span></span>Galéria</a>
+                                <ul>
+                                    <li><a class="ajax-link" data-type="page-transition" href="../../gallery.html">Minden</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="../../chaos.html">Káosz</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="../../fractal.html">Fraktál</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="../../3d.html">3D</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="../../games.html">Játékok</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="../../other.html">Minden Más</a></li>
+                                </ul>
+                            </li>
+                            <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
+                                    href="../../about.html"><span></span>Rólam</a></li>
+                            <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
+                                    href="../../irasok.html"><span></span>Írásaim</a></li>
+                            <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
+                                    href="../../contact.html"><span></span>Kapcsolat</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        `);
     } else {
-        $("#menu-overlay").html('<div id="close-menu"></div><div class="outer"><div class="inner"><nav><ul class="main-menu"><li class="mp"><a class="ajax-link menu-link" data-type="page-transition" href="index.html"><span></span>Kezdőlap</a></li><li class="mp has-sub active"><a href="#"><span></span>Galéria</a><ul><li><a class="ajax-link" data-type="page-transition" href="gallery.html">Minden</a></li><li><a class="ajax-link" data-type="page-transition" href="chaos.html">Káosz</a></li><li><a class="ajax-link" data-type="page-transition" href="fractal.html">Fraktál</a></li><li><a class="ajax-link" data-type="page-transition" href="3d.html">3D</a></li><li><a class="ajax-link" data-type="page-transition" href="games.html">Játékok</a></li><li><a class="ajax-link" data-type="page-transition" href="other.html">Minden Más</a></li></ul></li><li class="mp"><a class="ajax-link menu-link" data-type="page-transition" href="about.html"><span></span>Rólam</a></li><li class="mp"><a class="ajax-link menu-link" data-type="page-transition" href="contact.html"><span></span>Kapcsolat</a></li></ul></nav></div></div>');
+        $("#menu-overlay").html(`
+            <div id="close-menu"></div>
+            <div class="outer">
+                <div class="inner">
+                    <nav>
+                        <ul class="main-menu">
+                            <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
+                                    href="index.html"><span></span>Kezdőlap</a></li>
+                            <li class="mp has-sub active"><a href="#"><span></span>Galéria</a>
+                                <ul>
+                                    <li><a class="ajax-link" data-type="page-transition" href="gallery.html">Minden</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="chaos.html">Káosz</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="fractal.html">Fraktál</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="3d.html">3D</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="games.html">Játékok</a></li>
+                                    <li><a class="ajax-link" data-type="page-transition" href="other.html">Minden Más</a></li>
+                                </ul>
+                            </li>
+                            <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
+                                    href="irasok.html"><span></span>Írásaim</a></li>
+                            <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
+                                    href="about.html"><span></span>Rólam</a></li>
+                            <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
+                                    href="contact.html"><span></span>Kapcsolat</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        `);
     }
     $("#socials-text").html('<li><a href="https://www.facebook.com/profile.php?id=100085213481515" target="_blank"><i class="fa fa-facebook"></i></a></li><li><a href="https://www.instagram.com/miklos_teti/" target="_blank"><i class="fa fa-instagram"></i></a></li><li><a href="mailto:admin@tetimiki.hu" target="_blank"><i class="fa fa-envelope"></i></a></li>');
 
