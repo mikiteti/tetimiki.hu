@@ -122,7 +122,7 @@ function FirstLoad() {
                             <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
                                     href="../../about.html"><span></span>Rólam</a></li>
                             <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
-                                    href="../../irasok.html"><span></span>Írásaim</a></li>
+                                    href="../../irasok.html"><span></span>Olvasnivaló</a></li>
                             <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
                                     href="../../contact.html"><span></span>Kapcsolat</a></li>
                         </ul>
@@ -150,7 +150,7 @@ function FirstLoad() {
                                 </ul>
                             </li>
                             <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
-                                    href="irasok.html"><span></span>Írásaim</a></li>
+                                    href="irasok.html"><span></span>Olvasnivaló</a></li>
                             <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
                                     href="about.html"><span></span>Rólam</a></li>
                             <li class="mp"><a class="ajax-link menu-link" data-type="page-transition"
